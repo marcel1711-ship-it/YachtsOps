@@ -305,7 +305,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
 
         <div
           onClick={() => onNavigate('maintenance')}
-          className="hidden lg:block w-2/3 bg-gradient-to-br from-slate-800 via-blue-900 to-slate-900 rounded-xl px-6 py-5 text-white shadow-xl border border-slate-700/50 hover:border-blue-400 transition-all cursor-pointer shrink-0"
+          className="hidden lg:block w-2/3 bg-gradient-to-br from-slate-800 via-blue-900 to-slate-900 rounded-xl px-6 py-7 text-white shadow-xl border border-slate-700/50 hover:border-blue-400 transition-all cursor-pointer shrink-0"
         >
           <div className="flex items-center gap-6">
             {/* Semi-circle gauge */}
