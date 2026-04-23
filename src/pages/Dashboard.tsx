@@ -6,7 +6,6 @@ import {
   Package,
   Calendar,
   Building2,
-  Ship,
   Users as UsersIcon,
   CreditCard,
   Activity,
@@ -282,9 +281,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
   const overallHealth = Math.round((maintenanceHealth + inventoryHealth) / 2);
 
   const getHealthStatus = (health: number) => {
-    if (health >= 85) return { label: 'Operational', color: 'text-emerald-400', icon: '🟢' };
-    if (health >= 70) return { label: 'Attention Needed', color: 'text-amber-400', icon: '🟡' };
-    return { label: 'Critical', color: 'text-red-400', icon: '🔴' };
+    if (health >= 85) return { label: 'Operational', color: 'text-emerald-400', dot: 'bg-emerald-400' };
+    if (health >= 70) return { label: 'Attention Needed', color: 'text-amber-400', dot: 'bg-amber-400' };
+    return { label: 'Critical', color: 'text-red-400', dot: 'bg-red-400' };
   };
 
   const healthStatus = getHealthStatus(overallHealth);
@@ -298,9 +297,86 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-4xl font-bold text-gray-900 tracking-tight">Dashboard</h1>
-        <p className="text-gray-500 mt-2 text-base">Advanced vessel systems monitoring and operational analytics</p>
+      <div className="flex items-center justify-between gap-6">
+        <div className="shrink-0">
+          <h1 className="text-4xl font-bold text-gray-900 tracking-tight">Dashboard</h1>
+          <p className="text-gray-500 mt-2 text-base">Advanced vessel systems monitoring and operational analytics</p>
+        </div>
+
+        <div
+          onClick={() => onNavigate('maintenance')}
+          className="hidden lg:block w-2/3 bg-gradient-to-br from-slate-800 via-blue-900 to-slate-900 rounded-xl px-6 py-5 text-white shadow-xl border border-slate-700/50 hover:border-blue-400 transition-all cursor-pointer shrink-0"
+        >
+          <div className="flex items-center gap-6">
+            {/* Semi-circle gauge */}
+            <div className="relative shrink-0" style={{ width: 90, height: 50 }}>
+              <svg width="90" height="50" viewBox="0 0 90 50">
+                {/* Track */}
+                <path
+                  d="M 5 48 A 40 40 0 0 1 85 48"
+                  fill="none"
+                  stroke="rgba(255,255,255,0.15)"
+                  strokeWidth="8"
+                  strokeLinecap="round"
+                />
+                {/* Fill */}
+                <path
+                  d="M 5 48 A 40 40 0 0 1 85 48"
+                  fill="none"
+                  stroke={overallHealth >= 85 ? '#34d399' : overallHealth >= 70 ? '#fbbf24' : '#f87171'}
+                  strokeWidth="8"
+                  strokeLinecap="round"
+                  strokeDasharray={`${(loading ? 0 : overallHealth) * 1.257} 200`}
+                  style={{ transition: 'stroke-dasharray 0.6s ease' }}
+                />
+              </svg>
+              <div className="absolute inset-0 flex items-end justify-center pb-0.5">
+                <span className="text-base font-bold text-white leading-none">
+                  {loading ? '-' : `${overallHealth}%`}
+                </span>
+              </div>
+            </div>
+
+            {/* Labels */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-2">
+                <h3 className="text-sm font-bold text-white tracking-tight uppercase">Vessel Status</h3>
+                <Activity className="w-4 h-4 text-blue-300 shrink-0" />
+              </div>
+              {loading ? (
+                <div className="animate-pulse space-y-2">
+                  <div className="h-2 bg-white/10 rounded-full w-full" />
+                  <div className="h-2 bg-white/10 rounded-full w-3/4" />
+                </div>
+              ) : (
+                <div className="flex gap-4">
+                  {[
+                    { label: 'Maintenance', value: maintenanceHealth, color: 'bg-blue-400' },
+                    { label: 'Inventory', value: inventoryHealth, color: 'bg-emerald-400' },
+                  ].map(bar => (
+                    <div key={bar.label} className="flex-1 space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-blue-200 font-medium">{bar.label}</span>
+                        <span className="text-xs font-bold text-white">{bar.value}%</span>
+                      </div>
+                      <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                        <div className={`h-full ${bar.color} rounded-full transition-all duration-500`} style={{ width: `${bar.value}%` }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Status badge */}
+            {!loading && (
+              <div className="shrink-0 flex flex-col items-center gap-1.5">
+                <span className={`text-xs font-bold ${healthStatus.color}`}>{healthStatus.label}</span>
+                <span className={`w-2.5 h-2.5 rounded-full ${healthStatus.dot} shadow-lg`} />
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {!loading && (criticalCount > 0 || dueSoonCount > 0 || lowStockCritical > 0) && (
@@ -329,101 +405,32 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
-        <div
-          onClick={() => onNavigate('maintenance')}
-          className="bg-gradient-to-br from-slate-800 via-blue-900 to-slate-900 rounded-2xl p-7 text-white shadow-xl flex flex-col border border-slate-700/50 hover:border-blue-400 transition-all cursor-pointer lg:row-span-2"
-        >
-          <div className="mb-6">
-            {currentVesselName && (
-              <div className="flex items-center gap-2 mb-4">
-                <Ship className="w-4 h-4 text-blue-300" />
-                <span className="text-xs font-semibold text-blue-200 uppercase tracking-wider">{currentVesselName}</span>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+        {stats.map((stat, index) => {
+          const Icon = stat.icon;
+          return (
+            <div
+              key={index}
+              onClick={() => onNavigate(stat.nav)}
+              className="bg-white rounded-xl p-6 border border-gray-200 hover:shadow-lg hover:border-gray-300 transition-all cursor-pointer group"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className={`p-3 rounded-xl ${stat.color} group-hover:scale-110 transition-transform`}>
+                  <Icon className="w-6 h-6" />
+                </div>
+                <div className="text-right">
+                  <p className="text-4xl font-bold text-gray-900">
+                    {loading ? <span className="animate-pulse text-gray-300">-</span> : stat.value}
+                  </p>
+                </div>
               </div>
-            )}
-            <div className="flex items-start justify-between">
-              <h3 className="text-xl font-bold text-white tracking-tight">VESSEL STATUS</h3>
-              <div className="p-2.5 bg-white/10 rounded-xl backdrop-blur-sm border border-white/20">
-                <Activity className="w-6 h-6 text-white" />
+              <div>
+                <p className="text-sm font-semibold text-gray-700 mb-1">{stat.label}</p>
+                <p className="text-xs text-gray-500">{stat.trend}</p>
               </div>
             </div>
-          </div>
-
-          <div className="flex-1 flex flex-col justify-center">
-            {loading ? (
-              <div className="animate-pulse space-y-4">
-                <div className="h-16 bg-white/10 rounded-xl" />
-                <div className="h-3 bg-white/10 rounded-full" />
-              </div>
-            ) : (
-              <>
-                <div className="mb-6">
-                  <p className="text-6xl font-bold">{overallHealth}%</p>
-                  <div className="flex items-center gap-2 mt-3 mb-4">
-                    <span className="text-xl">{healthStatus.icon}</span>
-                    <p className={`text-base font-semibold ${healthStatus.color}`}>{healthStatus.label}</p>
-                  </div>
-                </div>
-
-                <div className="h-3 bg-white/10 rounded-full overflow-hidden mb-6">
-                  <div
-                    className={`h-full rounded-full transition-all duration-500 ${
-                      overallHealth >= 85 ? 'bg-gradient-to-r from-emerald-400 to-emerald-500' :
-                      overallHealth >= 70 ? 'bg-gradient-to-r from-amber-400 to-amber-500' :
-                      'bg-gradient-to-r from-red-400 to-red-500'
-                    }`}
-                    style={{ width: `${overallHealth}%` }}
-                  />
-                </div>
-
-                <div className="space-y-4 pt-4 border-t border-white/20">
-                  {[
-                    { label: 'Maintenance', value: maintenanceHealth, color: 'bg-blue-400' },
-                    { label: 'Inventory', value: inventoryHealth, color: 'bg-emerald-400' },
-                  ].map(bar => (
-                    <div key={bar.label} className="space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-blue-100 font-semibold tracking-wide">{bar.label}</span>
-                        <span className="text-sm font-bold text-white">{bar.value}%</span>
-                      </div>
-                      <div className="w-full h-3 bg-white/10 rounded-full overflow-hidden">
-                        <div className={`h-full ${bar.color} rounded-full transition-all duration-500`} style={{ width: `${bar.value}%` }} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-
-        <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-5 content-start">
-          {stats.map((stat, index) => {
-            const Icon = stat.icon;
-            return (
-              <div
-                key={index}
-                onClick={() => onNavigate(stat.nav)}
-                className="bg-white rounded-xl p-6 border border-gray-200 hover:shadow-lg hover:border-gray-300 transition-all cursor-pointer group"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className={`p-3 rounded-xl ${stat.color} group-hover:scale-110 transition-transform`}>
-                    <Icon className="w-6 h-6" />
-                  </div>
-                  <div className="text-right">
-                    <p className="text-4xl font-bold text-gray-900">
-                      {loading ? <span className="animate-pulse text-gray-300">-</span> : stat.value}
-                    </p>
-                  </div>
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-gray-700 mb-1">{stat.label}</p>
-                  <p className="text-xs text-gray-500">{stat.trend}</p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+          );
+        })}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
