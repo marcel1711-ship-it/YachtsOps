@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
+import { Landing } from './pages/Landing';
 import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
 import { Maintenance } from './pages/Maintenance';
@@ -33,6 +34,7 @@ const AppContent: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(initial.page);
   const [pageParams, setPageParams] = useState<any>(initial.params);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [showLanding, setShowLanding] = useState(true);
   // Remember deep-link destination so we can redirect there after login
   const [pendingPage] = useState(initial);
 
@@ -52,6 +54,9 @@ const AppContent: React.FC = () => {
   };
 
   if (!isAuthenticated) {
+    if (showLanding) {
+      return <Landing onEnterApp={() => setShowLanding(false)} />;
+    }
     return <Login onLogin={handleLogin} />;
   }
 
